@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LKA store — Premium</title>
+  <style>
+    :root{
+      --bg:#0a0a0d;
+      --card:#13131a;
+      --accent:#8b5cf6;
+      --accent2:#c084fc;
+      --muted:#9ca3af;
+    }
+    *{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+    body{margin:0;background:radial-gradient(circle at top,#14141e,#0a0a0d 60%);color:#fff;min-height:100vh;padding:0;overflow-x:hidden}
+
+    /* Center layout */
+    .center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+
+    /* Login */
+    .card{background:var(--card);padding:28px 30px;border-radius:20px;max-width:350px;width:100%;box-shadow:0 0 50px rgba(0,0,0,0.6);animation:fadeIn .6s}
+    .card h1{text-align:center;margin:0 0 16px;font-size:24px}
+    .input{width:100%;padding:12px 14px;background:#1b1b24;border:1px solid #2d2d3a;border-radius:12px;color:#fff;margin-bottom:14px}
+    .btn{width:100%;padding:12px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;transition:.2s}
+    .btn:hover{opacity:.85}
+
+    /* Fade intro */
+    .intro{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity 1s}
+    .intro.show{opacity:1;pointer-events:auto}
+    .intro .logo{font-size:60px;font-weight:800;letter-spacing:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;color:transparent;opacity:0;transform:translateY(20px);transition:1s}
+
+    /* Dashboard */
+    .dash{display:none;animation:fadeInDash 1s}
+    @keyframes fadeInDash{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:none}
+
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:20px 30px}
+    .logout{padding:9px 16px;background:var(--accent);border-radius:10px;border:none;color:#fff;font-weight:600;cursor:pointer}
+
+    .grid{display:grid;grid-template-columns:1fr 350px;gap:24px;padding:0 30px 40px}
+    .section{background:var(--card);padding:18px 20px;border-radius:18px;box-shadow:0 0 25px rgba(0,0,0,0.4)}
+    .section h2{margin:0 0 14px;font-size:22px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;color:transparent}
+
+    .brain-item,.store-item{padding:14px 16px;background:#1b1b24;border-radius:12px;margin-bottom:12px;cursor:pointer;transition:.2s}
+    .brain-item:hover,.store-item:hover{background:#232334}
+
+    /* Loja painel lateral */
+    .sidepanel{background:#1a1a22;border-left:2px solid var(--accent);padding:20px;position:fixed;top:0;right:-400px;width:360px;height:100vh;transition:.35s;z-index:40;box-shadow:-10px 0 25px rgba(0,0,0,.4)}
+    .sidepanel.show{right:0}
+    .sidepanel h3{margin:0 0 14px;font-size:24px}
+    .closePanel{cursor:pointer;font-size:18px;float:right;margin-top:-4px;color:var(--muted)}
+
+    .muted{color:var(--muted)}
+    .hidden{display:none}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginPage" class="center">
+    <div class="card">
+      <h1>Entrar</h1>
+      <input id="username" class="input" placeholder="Usuário" required>
+      <input id="password" class="input hidden" placeholder="Senha (apenas admins)" type="password" />
+      <small id="loginNote" class="muted">Se você for admin, digite o usuário e a senha.</small>
+      <button class="btn" id="loginBtn">Entrar</button>
+    </div>
+  </div>
+
+  <!-- FADE INTRO -->
+  <div id="intro" class="intro">
+    <div class="logo">LKA store</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="dash">
+    <div class="topbar">
+      <div>
+        <h1 style="margin:0;font-size:32px">Dashboard</h1>
+        <small class="muted">Painel da comunidade</small>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div id="userInfo" class="muted"></div>
+        <button class="logout" id="logoutBtn">Sair</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="section">
+        <h2>Brainrots recentes</h2>
+        <div id="brainList"></div>
+      </div>
+
+      <div class="section">
+        <h2>Lojas</h2>
+        <div id="storeList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL LATERAL PARA LOJAS -->
+  <div id="sidepanel" class="sidepanel">
+    <span class="closePanel" id="closePanel">✖</span>
+    <h3 id="panelTitle"></h3>
+    <ul id="panelContent" style="padding-left:18px;color:var(--muted)"></ul>
+    <div id="buyControls" style="margin-top:12px"></div>
+  </div>
+
+  <!-- ADMIN PANEL (only visible to admins) -->
+  <div id="adminPanel" class="sidepanel" style="right:-800px;width:760px">
+    <span class="closePanel" id="closeAdmin">✖</span>
+    <h3>Painel Admin — Vendas</h3>
+    <div style="margin-top:8px;color:var(--muted)">Visível apenas para usuários admin.</div>
+    <div id="adminContent" style="margin-top:12px"></div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+  const API_BASE = "https://backend-lka.onrender.com";
+
+  const ADMIN_USERS = ['2ksouza','capitaolka'];
+  const ADMIN_PASS = 'LKAADMIM'; // senha única for both
+
+  // User's provided PIX key (EVP)
+  const PIX_KEY = '6d11a94a-14cc-482f-a3c6-d784c7fa6eed';
+
+  const brainrots=[
+    {id:'b1',title:'Neon Heart',author:'João',price:1.00},
+    {id:'b2',title:'Midnight',author:'Ana',price:2.50},
+    {id:'b3',title:'Old School',author:'Pedro',price:4.00},
+    {id:'b4',title:'Vapor',author:'Lívia',price:7.00}
+  ];
+
+  const stores=[
+    {id:'s1',name:'Loja do João',items:['Neon Heart — 1.00','Retro Pack — 2.00'],seller:'João'},
+    {id:'s2',name:'Loja da Ana',items:['Midnight — 2.50','Shiny Set — 3.00'],seller:'Ana'},
+    {id:'s3',name:'Loja do Pedro',items:['Old School — 4.00'],seller:'Pedro'}
+  ];
+
+  // Elements
+  const loginPage = document.getElementById('loginPage');
+  const usernameIn = document.getElementById('username');
+  const passwordIn = document.getElementById('password');
+  const loginBtn = document.getElementById('loginBtn');
+  const intro = document.getElementById('intro');
+  const dashboard = document.getElementById('dashboard');
+  const brainList = document.getElementById('brainList');
+  const storeList = document.getElementById('storeList');
+  const sidepanel = document.getElementById('sidepanel');
+  const panelTitle = document.getElementById('panelTitle');
+  const panelContent = document.getElementById('panelContent');
+  const buyControls = document.getElementById('buyControls');
+  const closePanelBtn = document.getElementById('closePanel');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const userInfo = document.getElementById('userInfo');
+  const adminPanel = document.getElementById('adminPanel');
+  const adminContent = document.getElementById('adminContent');
+  const closeAdmin = document.getElementById('closeAdmin');
+
+  let loggedUser = null;
+  let isAdmin = false;
+  let selectedItem = null;
+
+  function escapeHtml(s){ return String(s).replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+  function renderBrainrots(){
+    brainList.innerHTML='';
+    brainrots.forEach(b=>{
+      const el = document.createElement('div');
+      el.className='brain-item';
+      el.innerHTML = `<strong>${escapeHtml(b.title)}</strong><br><small class="muted">por ${escapeHtml(b.author)} • R$ ${b.price.toFixed(2)}</small>`;
+      el.addEventListener('click', ()=> openBuy(b));
+      brainList.appendChild(el);
+    });
+  }
+
+  function renderStores(){
+    storeList.innerHTML='';
+    stores.forEach((s,i)=>{
+      const el = document.createElement('div');
+      el.className='store-item';
+      el.innerHTML = `<strong>${escapeHtml(s.name)}</strong>`;
+      el.addEventListener('click', ()=> openPanel(i));
+      storeList.appendChild(el);
+    });
+  }
+
+  function openPanel(i){
+    const loja = stores[i];
+    panelTitle.textContent = loja.name;
+    panelContent.innerHTML = loja.items.map(it=>`<li>${escapeHtml(it)}</li>`).join('');
+    sidepanel.classList.add('show');
+    const parts = loja.items[0].split(' — ');
+    const title = parts[0];
+    const price = (parts[1]||'').replace(/[kK]/,'') || '0';
+    buyControls.innerHTML = `<div style="margin-top:10px"><button class="btn" onclick="startBuyFromStore('${escapeHtml(title)}', ${Number(price)})">Comprar primeiro item</button></div>`;
+  }
+
+  function startBuyFromStore(title, price){
+    const item = { id: 'custom-'+Date.now(), title, price: Number(price) };
+    openBuy(item);
+  }
+
+  # truncated due to length - rest will be written to file
