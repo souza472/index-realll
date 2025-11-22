@@ -63,10 +63,10 @@ window.sendNotification = async function() {
     try {
       const sendNot = httpsCallable(functions, 'sendPaymentNotification');
       await sendNot({ paymentId: ref.id });
-      alert('Pagamento registrado e notificação enviada (se a function estiver implantada).');
+      window.location.href='confirmar.html'; e notificação enviada (se a function estiver implantada).');
     } catch (err) {
       console.warn('Function não disponível ou erro ao chamar:', err);
-      alert('Pagamento registrado. Abra o PIX e pague. ID: ' + ref.id);
+      window.location.href='confirmar.html';. Abra o PIX e pague. ID: ' + ref.id);
     }
   } catch (e) {
     console.error(e);
